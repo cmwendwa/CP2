@@ -20,11 +20,11 @@ class AbstractBaseModel(db.Model):
 class Bucketlist(AbstractBaseModel):
     __tablename__ = 'bucketlists'
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    items = db.relationship('Item', backref='bucketlist',
-                            lazy='dynamic')
+    items = db.relationship('Item', cascade="all,delete", backref='bucketlist',
+                            lazy='select')
 
-    def __init__(self, name, items=[]):
-        self.items = items
+    def __init__(self, name, created_by):
+        self.created_by = created_by
         super(Bucketlist, self).__init__(name)
 
     def __repr__(self):
@@ -33,11 +33,13 @@ class Bucketlist(AbstractBaseModel):
 
 class Item(AbstractBaseModel):
     __tablename__ = 'bucketitems'
-    done = db.Column(db.Boolean, index=True)
+    description = db.Column(db.Text)
+    done = db.Column(db.Boolean, default=False)
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
 
-    def __init__(self, name, bucketlist_id):
+    def __init__(self, name, bucketlist_id, description=''):
         self.bucketlist_id = bucketlist_id
+        self.description = description
         super(Item, self).__init__(name)
 
     def __repr__(self):
@@ -50,10 +52,12 @@ class User(db.Model):
     username = db.Column(db.String(32), index=True)
     password_hash = db.Column(db.String(128))
     bucketlists = db.relationship(
-        'Bucketlist', backref='bucketlist', lazy='dynamic')
+        'Bucketlist', cascade="all,delete", backref='bucketlist', lazy='dynamic')
 
-    def hash_password(self, password):
-        self.password_hash = pwd_context.encrypt(password)
+    @staticmethod
+    def hash_password(password):
+        password_hash = pwd_context.encrypt(password)
+        return password_hash
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.password_hash)
@@ -65,7 +69,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-    def generate_auth_token(self, expiration=600):
+    def generate_auth_token(self, expiration=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
@@ -75,9 +79,9 @@ class User(db.Model):
         try:
             data = s.loads(token)
         except SignatureExpired:
-            return None  # valid token, but expired
+            return None
         except BadSignature:
-            return None  # invalid token
+            return None
         user = User.query.get(data['id'])
         return user
 
