@@ -21,6 +21,10 @@ def create_app(config_choice):
     def gone(e):
         return jsonify(error=410, text=str(e)), 410
 
+    @app.errorhandler(409)
+    def gone(e):
+        return jsonify(error=409, text=str(e)), 409
+
     @app.errorhandler(404)
     def page_not_found(e):
         return jsonify(error=404, message=str(e)), 404
