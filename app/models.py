@@ -33,11 +33,11 @@ class Bucketlist(AbstractBaseModel):
 
 class Item(AbstractBaseModel):
     __tablename__ = 'bucketitems'
-    description = db.Column(db.Text)
     done = db.Column(db.Boolean, default=False)
     bucketlist_id = db.Column(db.Integer, db.ForeignKey('bucketlists.id'))
+    description = db.Column(db.Text)
 
-    def __init__(self, name, bucketlist_id, description=''):
+    def __init__(self, name, bucketlist_id, description=""):
         self.bucketlist_id = bucketlist_id
         self.description = description
         super(Item, self).__init__(name)
@@ -59,8 +59,14 @@ class User(db.Model):
         password_hash = pwd_context.encrypt(password)
         return password_hash
 
-    def verify_password(self, password):
+    def verify_password(self, password,):
         return pwd_context.verify(password, self.password_hash)
+
+    @property
+    def password(self):
+        """Raises an attribute error when someone tries to read the password"""
+
+        raise AttributeError("Password is not a readable attribute")
 
     def __init__(self, username, password):
         self.username = username
