@@ -154,7 +154,7 @@ class BucketlistApi(Resource):
         if not to_delete == None:
             db.session.delete(to_delete)
             db.session.commit()
-            return {'message': 'Bucketlist successfully deleted'}, 200
+            return {'message': 'Bucketlist successfully deleted'}, 201
         else:
             return {'message': 'Not deleted, Bucketlist does not exist'}, 404
 

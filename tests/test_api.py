@@ -14,13 +14,13 @@ class BucketlistsRouteTest(BaseTestCase):
     def test_bucketlists_api_route_get(self):
         response = self.test_app.get('/bucketlists/1')
         self.assertEqual(response.status_code, 200)
-        received_data = str(response.data,encoding='utf-8')
+        received_data = str(response.data, encoding='utf-8')
         self.assertIn("id:1", received_data)
 
     def test_bucketlists_api_route_get_missing_item(self):
-        #deleted
+        # deleted
 
-        #non_existent
+        # non_existent
 
         pass
 
@@ -28,15 +28,16 @@ class BucketlistsRouteTest(BaseTestCase):
         payload = dict(name="Cook lunch",
                        items=[],
                        )
-        response = self.test_app.post('/api/v1/bucketlists/',data=payload)
+        response = self.test_app.post('/api/v1/bucketlists/', data=payload)
         self.assertEqual(response.status_code, 200)
-        received_data = str(response.data,encoding='utf-8')
+        received_data = str(response.data, encoding='utf-8')
         self.assertIn("List succesfully added", received_data)
+
     def test_bucketlists_api_route_post_not_executing_successfully(self):
         # missing name
 
-        #already_exists
-
+        # already_exists
+        pass
 
 
 class BucketlistRouteTest(BaseTestCase):
@@ -44,12 +45,12 @@ class BucketlistRouteTest(BaseTestCase):
     def test_bucketlist_api_route_get(self):
         response = self.test_app.get('/api/v1/bucketlists/3')
         self.assertEqual(response.status_code, 200)
-        received_data = str(response.data,encoding='utf-8')
+        received_data = str(response.data, encoding='utf-8')
         self.assertIn("Cook", received_data)
 
         response = self.test_app.get('/api/v1/bucketlists/2')
         self.assertEqual(response.status_code, 200)
-        received_data = str(response.data,encoding='utf-8')
+        received_data = str(response.data, encoding='utf-8')
         self.assertIn(len(response.data), received_data)
 
     def test_bucketlist_api_route_post(self):
@@ -66,7 +67,6 @@ class BucketlistRouteTest(BaseTestCase):
         response = self.test_app.delete('/api/v1/bucketlists/3')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 21)
-
 
 
 class BucketItemRouteTest(BaseTestCase):
@@ -96,13 +96,12 @@ class AdditionalFunctionalityTest(BaseTestCase):
     def test_pagination(self):
         # given limit possible
 
-        #given limit greater than available 
-
+        # given limit greater than available
 
         pass
 
     def test_searching_by_name(self):
-        #search an existent item
+        # search an existent item
 
-        #search a non-existent item
+        # search a non-existent item
         pass

@@ -6,7 +6,6 @@ import os
 from flask import send_from_directory
 
 
-
 db = SQLAlchemy()
 
 
@@ -25,9 +24,9 @@ def create_app(config_choice):
     def gone(e):
         return jsonify(error=409, text=str(e)), 409
 
-    @app.errorhandler(404)
-    def page_not_found(e):
-        return jsonify(error=404, message=str(e)), 404
+    # @app.errorhandler(404)
+    # def page_not_found(e):
+    #     return jsonify(error=404, message=str(e)), 404
 
     @app.errorhandler(403)
     def forbidden(e):
@@ -44,13 +43,12 @@ def create_app(config_choice):
         return send_from_directory(os.path.join(app.root_path, 'static'),
                                    'favicon.png')
 
-
-
-
     return app
 
 
 app = create_app('development')
+
+api = Api(app=app, prefix='/api/v1')
 
 
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/pp.db'
