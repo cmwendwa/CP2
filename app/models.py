@@ -23,7 +23,7 @@ class Bucketlist(AbstractBaseModel):
     items = db.relationship('Item', cascade="all,delete", backref='bucketlist',
                             lazy='select')
 
-    def __init__(self, name, created_by):
+    def __init__(self, name, created_by=None):
         self.created_by = created_by
         super(Bucketlist, self).__init__(name)
 

@@ -5,6 +5,7 @@ from tests import BaseTestCase, db
 
 class TestModels(BaseTestCase):
     def setUp(self):
+        super(TestModels, self).setUp()
         bucketlist = Bucketlist("Cook")
         db.session.add(bucketlist)
         db.session.commit()
@@ -34,7 +35,7 @@ class TestModels(BaseTestCase):
         year = str(datetime.today().year)
         self.assertIn(year, str(reload_list.date_created))
         self.assertIn(year, str(reload_list.date_modified))
-        self.assertIn('SELECT bucketitems.id', str(reload_list.items))
+        self.assertEqual(len(reload_list.items), 0)
 
         # create another bucket object, save it to db and asser its attributes
         bucketlist = Bucketlist("Play")
@@ -47,7 +48,7 @@ class TestModels(BaseTestCase):
         year = str(datetime.today().year)
         self.assertIn(year, str(reload_list.date_created))
         self.assertIn(year, str(reload_list.date_modified))
-        self.assertIn('SELECT bucketitems.id', str(reload_list.items))
+        self.assertEqual(len(reload_list.items), 0)
 
     def test_creating_bucketlist_with_a_missing_name(self):
         """Tests successfully creating a bucketlist"""
@@ -95,7 +96,7 @@ class TestModels(BaseTestCase):
         self.assertEqual(self.reload_list.id, 1)
         self.assertEqual(self.reload_list.name, "Cook")
 
-        item = Item("Cook lunch", 1, "Coooking Ugali omena")
+        item = Item("Cook lunch", self.reload_list.id, "Coooking Ugali omena")
         db.session.add(item)
         db.session.commit()
 
@@ -200,3 +201,6 @@ class TestModels(BaseTestCase):
         re_reload_user = User.query.filter_by(id=1).first()
         #assert not found in database
         self.assertEqual(re_reload_user, None)
+
+    def TearDown(self):
+        super(TestModels, self).TearDown

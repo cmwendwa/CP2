@@ -1,5 +1,5 @@
 from flask_testing import TestCase
-from app import app, db
+from manage import app, db
 from config import config
 
 
@@ -9,15 +9,17 @@ class BaseTestCase(TestCase):
 
         # configuring the app to use testing settings
         app.config.from_object(config['testing'])
-        db.create_all()
-
 
         return app
 
     def setUp(self):
         """Adds resources for use int the test suites"""
+
         # Sets up the test client"""
+
         self.test_app = self.create_app().test_client()
+
+        db.create_all()
 
     def tearDown(self):
 

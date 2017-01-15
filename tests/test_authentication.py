@@ -1,5 +1,6 @@
 from . import BaseTestCase
 import json
+from base64 import b64encode
 
 
 class TestUserRegistration(BaseTestCase):
@@ -15,37 +16,37 @@ class TestUserRegistration(BaseTestCase):
             '/api/v1/auth/register', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 201)
-        self.assertIn(message, 'john')
+        self.assertIn('successfully added', message)
 
     def test_user_registration_of_an_already_existing_user(self):
         # register user
-        payload = dict(User="john", Password="password123")
+        payload = dict(username="john", password="password123")
         response = self.test_app.post('/api/v1/auth/register', data=payload)
         message = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 409)
-        self.assertIn(message, 'john')
+        self.assertEqual(response.status_code, 201)
+        self.assertIn('successfully added', message)
 
         # re-register the user
-        payload = dict(User="john", Password="password123")
+        payload = dict(username="john", password="password123")
         response = self.test_app.post('/api/v1/auth/register', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 409)
-        self.assertIn(message, 'User could not be registered')
+        self.assertIn('already exists', message)
 
     def test_user_registration_with_incomplete_data(self):
         # missing password
-        payload = dict(User="john")
+        payload = dict(username="john")
         response = self.test_app.post('/api/v1/auth/register', data=payload)
         message = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(message, 'Successfully registered.')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('password not provided', message)
 
         # missing username
         payload = dict(Password="password123")
         response = self.test_app.post('/api/v1/auth/register', data=payload)
         message = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(message, 'password not provided')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('username not provided', message)
 
 
 class TestUserLogin(BaseTestCase):
@@ -54,35 +55,40 @@ class TestUserLogin(BaseTestCase):
         super(TestUserLogin, self).setUp()
 
         # register the user to use in tests
-        payload = dict(User="john", Password="password123")
-        self.test_app.post('/api/v1/auth/register', data=payload)
+        payload = dict(username="john", password="password123")
+        response = self.test_app.post('/api/v1/auth/register', data=payload)
+        print(response.data)
 
     def test_user_login(self):
         # successful user login
-        payload = dict(User="john", Password="password123")
+        payload = dict(username="john", password="password123")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(message, 'Successfully logged in')
+        self.assertIn('Authorization', message)
 
     def test_user_login_with_incorrect_credentials(self):
         # with wrong password
-        payload = dict(User="john", Password="wrongpass")
+        payload = dict(username="john", password="wrongpass")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 400)
-        self.assertIn(message, 'Login Failed.')
+        self.assertIn('Invalid', message)
 
         # with non-existent username
-        payload = dict(User="nonexistent", Password="password123")
+        payload = dict(username="nonexistent", password="password123")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(message, 'Login Failed')
+        self.assertIn('Invalid username', message)
 
     def test_getting_an_authentication_token(self):
-        payload = dict(User="john", Password="password123")
-        response = self.test_app.post('/api/v1/auth/token', data=payload)
+
+        username = "john"
+        password = "password123"
+        header = {'Authorization': 'Basic ' + b64encode(bytes(
+                  (username + ":" + password), 'ascii')).decode('ascii')}
+        response = self.test_app.get('/api/v1/auth/token', headers=header)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 200)
-        assertIn(message, "Authorization")
+        self.assertIn("token", message)

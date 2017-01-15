@@ -8,6 +8,8 @@ from ..serializers import bucketlist_serializer, item_serializer
 
 auth = HTTPBasicAuth()
 
+from base64 import b32encode
+
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -40,7 +42,7 @@ class RegisterApi(Resource):
         user = User(username=username, password=password)
         db.session.add(user)
         db.session.commit()
-        return {'message': 'User successfully added'}
+        return {'message': 'User successfully added'}, 201
 
 
 class LoginApi(Resource):
@@ -62,10 +64,10 @@ class LoginApi(Resource):
                 token = user.generate_auth_token()
                 return {'Authorization': token.decode('ascii')}
             else:
-                return {'message': 'Invalid Password'}, 400
+                return {'message': 'Invalid password'}, 400
 
         else:
-            return {'message': 'Invalid Username'}, 400
+            return {'message': 'Invalid username'}, 400
 
 
 class GetTokenApi(Resource):
@@ -89,7 +91,7 @@ class BucketlistsApi(Resource):
             db.session.add(new_bucketlist)
             db.session.commit()
             new_bucketlist = new_bucketlist
-            return marshal(new_bucketlist, bucketlist_serializer)
+            return marshal(new_bucketlist, bucketlist_serializer), 201
         else:
             return {'message': "Bucketlist already exists"}, 409
 
@@ -154,7 +156,7 @@ class BucketlistApi(Resource):
         if not to_delete == None:
             db.session.delete(to_delete)
             db.session.commit()
-            return {'message': 'Bucketlist successfully deleted'}, 201
+            return {'message': 'Bucketlist successfully deleted'}
         else:
             return {'message': 'Not deleted, Bucketlist does not exist'}, 404
 
@@ -163,7 +165,7 @@ class BucketlistItemCreateApi(Resource):
     def __init__(self):
         self.parse = reqparse.RequestParser()
         self.parse.add_argument('name', type=str, required=True,
-                                help='Bucket list id not provided',
+                                help='Item name not provided',
                                 location='form')
         self.parse.add_argument('description', type=str,
                                 location='form')
@@ -181,7 +183,10 @@ class BucketlistItemCreateApi(Resource):
 
         if Item.query.filter_by(name=item_name, bucketlist_id=bucketlist_id).first():
             return {'message': 'An item with the provided item name already exists.'}, 409
-        new_item = Item(item_name, bucketlist_id)
+        if description:
+            new_item = Item(item_name, bucketlist_id, description)
+        else:
+            new_item = Item(item_name, bucketlist_id)
         db.session.add(new_item)
         db.session.commit()
         created_item = new_item
@@ -202,19 +207,23 @@ class BucketItemsApi(Resource):
     @auth.login_required
     def put(self, id, item_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('item_name', type=str)
+        parser.add_argument('name', type=str)
         parser.add_argument('done', type=bool)
+        parser.add_argument('description', type=bool)
         edit_item = Item.query.filter_by(bucketlist_id=id, id=item_id).first()
 
         if edit_item == None:
-            return {'message': 'The item you tried to edit does not exist.'}, 400
+            return {'message': 'The item you tried to edit does not exist.'}, 404
         else:
             args = parser.parse_args()
             done = args['done']
-            name = args['item_name']
+            name = args['name']
+            description = args['description']
             if done:
                 edit_item.done = done
             if name:
+                edit_item.name = name
+            if description:
                 edit_item.name = name
             db.session.add(edit_item)
             db.session.commit()
@@ -226,8 +235,8 @@ class BucketItemsApi(Resource):
         delete_item = Item.query.filter_by(
             bucketlist_id=id, id=item_id).first()
         if delete_item == None:
-            return {'message': 'The item you tried to delete does not exist.'}, 400
+            return {'message': 'The item you tried to delete does not exist.'}, 404
         db.session.delete(delete_item)
         db.session.commit()
 
-        return {'message': 'Item was successfully deleted'}
+        return {'message': 'Item was successfully deleted'}, 200

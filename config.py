@@ -6,7 +6,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRET_KEY = os.urandom(24)
+    SECRET_KEY = "clement"#os.urandom(24)
     SQLALCHEMY_DATABASE_URI = 'postgresql://mimi:mimi123@localhost/bucketlist'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
