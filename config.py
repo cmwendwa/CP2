@@ -6,8 +6,8 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRET_KEY = "clement"#os.urandom(24)
-    SQLALCHEMY_DATABASE_URI = 'postgresql://mimi:mimi123@localhost/bucketlist'
+    SECRET_KEY = "clement"  # os.urandom(24)
+    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost/bl'
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
 
@@ -24,8 +24,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + \
-        os.path.join(basedir, 'data-test.sqlite')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
 config = {
