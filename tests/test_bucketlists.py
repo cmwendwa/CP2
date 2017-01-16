@@ -1,26 +1,13 @@
-from . import BaseTestCase
+from .test_api import ApiBaseTest
 import json
-from base64 import b64encode
 
 
-class BucketlistsRouteTest(BaseTestCase):
+class BucketlistsRouteTest(ApiBaseTest):
 
     def setUp(self):
         """ Sets up the test client"""
 
         super(BucketlistsRouteTest, self).setUp()
-        # register user
-        payload = dict(username="clement", password="password123")
-        self.test_app.post('/api/v1/auth/register', data=payload)
-        payload = dict(username="clement", password="password123")
-        response = self.test_app.post(
-            '/api/v1/auth/login', data=payload)
-
-        # login user
-        login_response = json.loads(str(response.data, encoding='utf-8'))
-        token = login_response['Authorization']
-        self.header = {'Authorization': ' Basic ' + b64encode(
-            bytes(token + ':', 'ascii')).decode('ascii')}
 
     def test_creating_a_new_bucketlist(self):
         # successfully create a buckelist

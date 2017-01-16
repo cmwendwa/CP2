@@ -73,8 +73,56 @@ class LoginApi(Resource):
 class GetTokenApi(Resource):
     @auth.login_required
     def get(self):
+        """
+        This is the token endpoint and returns the authentication token of a logged a user
+        tags:
+          - Bucketlist API
+        parameters:
+          -
+        responses:
+          500:
+            description: Server error!
+          200:
+            description: successful request
+            schema:
+          404:
+            description: Not logged in.
+          400:
+            description: Error logging in
+
+
+        """
         token = g.user.generate_auth_token()
-        return {'token': token.decode('ascii')}
+        return {'token': token.decode('ascii')}, 200
+
+
+class IndexResource(Resource):
+    @auth.login_required
+    def get(self):
+        """
+        This is the bucketlist API
+        Call this api to create a Bucketlists of things you want to do, add items to this 
+        bucketlist, view, edit and delete bucketlists and items 
+        ---
+        tags:
+          - Bucketlist API
+        parameters:
+          -
+        responses:
+          500:
+            description: Server error!
+          200:
+            description: user token
+            schema:
+              token
+          404:
+            description: Not logged in.logged in
+          400:
+            description: Error logging in
+
+        """
+
+        return {'message': "Welcome to Bucketlist API"}
 
 
 class BucketlistsApi(Resource):

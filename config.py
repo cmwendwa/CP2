@@ -6,8 +6,9 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRET_KEY = "clement"  # os.urandom(24)
-    SQLALCHEMY_DATABASE_URI = 'postgresql://postgres@localhost/bl'
+    SECRET_KEY = os.urandom(24)
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + \
+        os.path.join(basedir, 'bucketlist-data.sqlite')
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
 
@@ -33,5 +34,5 @@ config = {
     'Production': ProductionConfig,
     'development': DevelopmentConfig,
     'testing': TestingConfig,
-    'SECRET_KEY': '1Jclemn',
+    'SECRET_KEY': os.urandom(24)
 }

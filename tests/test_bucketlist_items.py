@@ -1,31 +1,17 @@
-from tests import BaseTestCase
 import json
-from base64 import b64encode
+from .test_api import ApiBaseTest
 
 
-class TestBucketlistItems(BaseTestCase):
+class TestBucketlistItems(ApiBaseTest):
     def setUp(self):
         """ Sets up the test client"""
 
         super(TestBucketlistItems, self).setUp()
-        # register user
-        payload = dict(username="clement", password="password123")
-        self.test_app.post('/api/v1/auth/register', data=payload)
-        payload = dict(username="clement", password="password123")
-        response = self.test_app.post(
-            '/api/v1/auth/login', data=payload)
-
-        # login user
-        login_response = json.loads(str(response.data, encoding='utf-8'))
-        token = login_response['Authorization']
-        self.header = {'Authorization': ' Basic ' + b64encode(
-            bytes(token + ':', 'ascii')).decode('ascii')}
 
         # create a bucketlist
         payload = {'name': "Cook"}
         response = self.test_app.post(
             '/api/v1/bucketlists/', data=payload, headers=self.header)
-        print(response)
 
     def test_creating_an_item(self):
         # create an item
