@@ -42,13 +42,75 @@ class BucketlistsRouteTest(ApiBaseTest):
         self.assertIn("already exists", received_data)
 
     def test_retrieving_all_bucketlists(self):
+        # add six bucketlists
+        # first
+        payload = {'name': "cook"}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # second
+        payload = {'name': 'plot'}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # third
+        payload = {'name': "play"}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # fourth
+        payload = {'name': "swim"}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # fifth
+        payload = {'name': 'chase'}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # sixth
+        payload = {'name': "travel"}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
+        # seventh
+        payload = {'name': "read"}
+        self.test_app.post(
+            '/api/v1/bucketlists/', data=payload, headers=self.header)
 
+        # retrieve all bucketlists
         response = self.test_app.get(
             'api/v1/bucketlists/', headers=self.header)
+
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+        received_data = str(response.data, encoding='utf-8')
+        self.assertIn("cook", received_data)
+        self.assertIn("plot", received_data)
+        self.assertIn("swim", received_data)
+        self.assertIn('"has_next": true', received_data)
+        self.assertIn(
+            "http://localhost/api/v1/bucketlists?limit=5&page=2", received_data)
+
+        response = self.test_app.get(
+            "api/v1/bucketlists/?limit=5&page=2", headers=self.header)
+        #self.assertEqual(response.status_code, 200)
+        received_data = str(response.data, encoding='utf-8')
+        self.assertIn("read", received_data)
+        self.assertIn("travel", received_data)
+
+        # retrieving a single bucketlist using search
+        response = self.test_app.get(
+            'api/v1/bucketlists/?q=cook', headers=self.header)
         print(response.data)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
         self.assertIn("id", received_data)
+        self.assertIn("cook", received_data)
+        self.assertIn("date_created", received_data)
+        self.assertIn("date_modified", received_data)
+
+        # test retrieving an item that does not exist by name
+        response = self.test_app.get(
+            'api/v1/bucketlists/?q=notthere', headers=self.header)
+        print(response.data)
+        self.assertEqual(response.status_code, 200)
+        received_data = str(response.data, encoding='utf-8')
+        self.assertIn("not found", received_data)
 
     def test_retrieving_a_bucketlist(self):
         # add firsr bucketlist
@@ -84,9 +146,12 @@ class BucketlistsRouteTest(ApiBaseTest):
 
     def test_editing_a_bucket_list(self):
         # add a bucketlist
-        payload = {'name': 'cook'}
+        # add firsr bucketlist
+        payload = {'name': "Cook"}
+        print(payload)
         response = self.test_app.post(
             '/api/v1/bucketlists/', data=payload, headers=self.header)
+
         # edit the addded bucketlist
         update = {'name': 'Cooking'}
         put_response = self.test_app.put(

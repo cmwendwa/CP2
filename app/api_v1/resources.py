@@ -146,25 +146,51 @@ class BucketlistsApi(Resource):
     @auth.login_required
     def get(self):
         parse = reqparse.RequestParser()
-        parse.add_argument('page', type=int, location='json')
-        parse.add_argument('limit', type=int, location='json')
+        parse.add_argument('page', type=int, default=1)
+        parse.add_argument('limit', type=int, default=5)
         parse.add_argument('q', type=str, location='args')
         args = parse.parse_args()
         search_name = args['q']
         limit = args['limit']
         page_no = args['page']
-
+        # implement search function/option
         if search_name:
             search_results = Bucketlist.query.filter_by(
-                name=name, created_by=g.user.id).paginate(page, limit, False)
+                name=search_name, created_by=g.user.id).first()
 
             if search_results:
-                return marshal(search_results, bucketlist_serializer)
+                return {"Found ": marshal(search_results, bucketlist_serializer)}
             else:
-                return {'message': 'Bucketlist ' + search_name + ' not found.'}, 404
-        all_bucketlists = Bucketlist.query.filter_by(
-            created_by=g.user.id).first()
-        return marshal(all_bucketlists, bucketlist_serializer)
+                return {'message': 'Bucketlist ' + search_name + ' not found.'}
+        # get all bucketlists and paginarw
+        bucketlists_per_page = Bucketlist.query.filter_by(
+            created_by=g.user.id).paginate(
+                page=page_no, per_page=limit, error_out=False)
+
+        all_bucketlists = bucketlists_per_page.pages
+
+        has_next = bucketlists_per_page.has_next
+        has_previous = bucketlists_per_page.has_prev
+        if has_next:
+            next_page = str(request.url_root) + 'api/v1/bucketlists?' + \
+                'limit=' + str(limit) + '&page=' + str(page_no + 1)
+        else:
+            next_page = 'None'
+        if has_previous:
+            previous_page = request.url_root + 'api/v1/bucketlists?' + \
+                'limit=' + str(limit) + '&page=' + str(page_no - 1)
+        else:
+            previous_page = 'None'
+
+        bucketlists = bucketlists_per_page.items
+
+        response = {'bucketlists': marshal(bucketlists, bucketlist_serializer),
+                    'has_next': has_next,
+                    'pages': all_bucketlists,
+                    'previous_page': previous_page,
+                    'next_page': next_page
+                    }
+        return response
 
 
 class BucketlistApi(Resource):
