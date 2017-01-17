@@ -18,7 +18,7 @@ def verify_password(username_or_token, password):
     if not user:
         # try to authenticate with username/password
         user = User.query.filter_by(username=username_or_token).first()
-        if not user or not user.verify_password(password):
+        if not user or not user.verify_password(password) == True:
             return False
     g.user = user
     return True
@@ -56,18 +56,18 @@ class LoginApi(Resource):
 
     def post(self):
         args = self.parse.parse_args()
-        username = args['username']
+        username = args['username'].lower()
         password = args['password']
         user = User.query.filter_by(username=username).first()
-        if user is not None:
-            if user.verify_password(password):
+        if user:
+            if verify_password(user.username, password) == True:
                 token = user.generate_auth_token()
                 return {'Authorization': token.decode('ascii')}
-            else:
-                return {'message': 'Invalid password'}, 400
+            elif verify_password(user.username, password) == False:
+                return {'message': 'Invalid password '}, 400
 
         else:
-            return {'message': 'Invalid username'}, 400
+            return {'message': 'Specified username not recognised '}, 400
 
 
 class GetTokenApi(Resource):
@@ -101,8 +101,8 @@ class IndexResource(Resource):
     def get(self):
         """
         This is the bucketlist API
-        Call this api to create a Bucketlists of things you want to do, add items to this 
-        bucketlist, view, edit and delete bucketlists and items 
+        Call this api to create a Bucketlists of things you want to do, add items to this
+        bucketlist, view, edit and delete bucketlists and items
         ---
         tags:
           - Bucketlist API
@@ -122,7 +122,7 @@ class IndexResource(Resource):
 
         """
 
-        return {'message': "Welcome to Bucketlist API"}
+        return {'message': "Welcome to Bucketlist API"}, 200
 
 
 class BucketlistsApi(Resource):
@@ -132,14 +132,14 @@ class BucketlistsApi(Resource):
         parse.add_argument('name', type=str, required=True,
                            help='Buckestlist  name not provided', location='form')
         args = parse.parse_args()
-        name = args['name']
+        name = args['name'].casefold()
         if Bucketlist.query.filter_by(name=name).first() == None:
             created_by = g.user.id
             new_bucketlist = Bucketlist(name, created_by)
             db.session.add(new_bucketlist)
             db.session.commit()
             new_bucketlist = new_bucketlist
-            return marshal(new_bucketlist, bucketlist_serializer), 201
+            return {"successfully created: ": marshal(new_bucketlist, bucketlist_serializer)}, 201
         else:
             return {'message': "Bucketlist already exists"}, 409
 
@@ -156,7 +156,7 @@ class BucketlistsApi(Resource):
         # implement search function/option
         if search_name:
             search_results = Bucketlist.query.filter_by(
-                name=search_name, created_by=g.user.id).first()
+                name=search_name.casefold(), created_by=g.user.id).first()
 
             if search_results:
                 return {"Found ": marshal(search_results, bucketlist_serializer)}
@@ -218,7 +218,7 @@ class BucketlistApi(Resource):
             got_list.name = new_name
             db.session.add(got_list)
             db.session.commit()
-            return marshal(got_list, bucketlist_serializer)
+            return {"successfully edited ": marshal(got_list, bucketlist_serializer)}, 200
 
         else:
             return {'message': 'Specified bucketlist not found.'}, 404
@@ -230,7 +230,7 @@ class BucketlistApi(Resource):
         if not to_delete == None:
             db.session.delete(to_delete)
             db.session.commit()
-            return {'message': 'Bucketlist successfully deleted'}
+            return {'message': 'Bucketlist successfully deleted'}, 200
         else:
             return {'message': 'Not deleted, Bucketlist does not exist'}, 404
 
@@ -253,7 +253,7 @@ class BucketlistItemCreateApi(Resource):
         bucketlist = Bucketlist.query.filter_by(
             id=bucketlist_id, created_by=g.user.id).first()
         if not bucketlist:
-            return {'message': 'The bucketlist you want to insert an item to does not exists.'}
+            return {'message': 'The bucketlist you want to insert an item to does not exists.'}, 404
 
         if Item.query.filter_by(name=item_name, bucketlist_id=bucketlist_id).first():
             return {'message': 'An item with the provided item name already exists.'}, 409
@@ -265,7 +265,7 @@ class BucketlistItemCreateApi(Resource):
         db.session.commit()
         created_item = new_item
 
-        return marshal(new_item, item_serializer)
+        return {"successfuly created: ": marshal(new_item, item_serializer)}
 
 
 class BucketItemsApi(Resource):
@@ -283,7 +283,7 @@ class BucketItemsApi(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=str)
         parser.add_argument('done', type=bool)
-        parser.add_argument('description', type=bool)
+        parser.add_argument('description', type=str)
         edit_item = Item.query.filter_by(bucketlist_id=id, id=item_id).first()
 
         if edit_item == None:
@@ -298,10 +298,10 @@ class BucketItemsApi(Resource):
             if name:
                 edit_item.name = name
             if description:
-                edit_item.name = name
+                edit_item.description = description
             db.session.add(edit_item)
             db.session.commit()
-            return marshal(edit_item, item_serializer)
+            return {"successfully upadated: ": marshal(edit_item, item_serializer)}, 200
 
     @auth.login_required
     def delete(self, id, item_id):

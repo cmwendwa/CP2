@@ -1,4 +1,4 @@
-from . import BaseTestCase
+from tests import BaseTestCase
 import json
 from base64 import b64encode
 
@@ -73,14 +73,14 @@ class TestUserLogin(BaseTestCase):
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('Invalid', message)
+        self.assertIn('Invalid password', message)
 
         # with non-existent username
         payload = dict(username="nonexistent", password="password123")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 400)
-        self.assertIn('Invalid username', message)
+        self.assertIn(' username not recognised', message)
 
     def test_getting_an_authentication_token(self):
 
@@ -92,3 +92,25 @@ class TestUserLogin(BaseTestCase):
         message = str(response.data, encoding='utf-8')
         self.assertEqual(response.status_code, 200)
         self.assertIn("token", message)
+
+    def test_accessing_index_resource_with_a_token(self):
+        # with authentication
+        payload = dict(username="john", password="password123")
+        response = self.test_app.post('/api/v1/auth/login', data=payload)
+        received_data = str(response.data, 'utf-8')
+        token = json.loads(received_data)['Authorization']
+        print("Token: ", str(token))
+        header = {'Authorization':
+                  'Basic ' +
+                  b64encode(bytes(token + ':', 'ascii')).decode('ascii')}
+
+        response = self.test_app.get('api/v1/', headers=header)
+        received_data = str(response.data, 'utf-8')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Welcome to Bucketlist API', received_data)
+
+        # without authentication
+        response = self.test_app.get('api/v1/')
+        self.assertEqual(response.status_code, 401)
+        received_data = str(response.data, 'utf-8')
+        self.assertIn('Unauthorized', received_data)

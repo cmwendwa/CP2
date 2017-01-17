@@ -22,6 +22,14 @@ class ApiBaseTest(BaseTestCase):
 
 class TestApi(ApiBaseTest):
     def test_index_resource(self):
+        #with authentication
         response = self.test_app.get('api/v1/', headers=self.header)
         received_data = str(response.data, 'utf-8')
-        self.assertIn('Bucketlist API',received_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Bucketlist API', received_data)
+
+        # without authentication
+        response = self.test_app.get('api/v1/')
+        self.assertEqual(response.status_code, 401)
+        received_data = str(response.data, 'utf-8')
+        self.assertIn('Unauthorized', received_data)

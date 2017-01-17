@@ -1,6 +1,7 @@
 from app.models import Bucketlist, Item, User
 from datetime import datetime
 from tests import BaseTestCase, db
+from time import sleep
 
 
 class TestModels(BaseTestCase):
@@ -49,6 +50,11 @@ class TestModels(BaseTestCase):
         self.assertIn(year, str(reload_list.date_created))
         self.assertIn(year, str(reload_list.date_modified))
         self.assertEqual(len(reload_list.items), 0)
+        # test querying bucketlists
+        bucketlist_query = Bucketlist.query.all()
+        self.assertIn("<Bucketlist 'Cook'>", str(bucketlist_query))
+        self.assertIn("<Bucketlist 'Play'>", str(bucketlist_query))
+        self.assertFalse("<Bucketlist 'Not in'>" in str(bucketlist_query))
 
     def test_creating_bucketlist_with_a_missing_name(self):
         """Tests successfully creating a bucketlist"""
@@ -89,7 +95,7 @@ class TestModels(BaseTestCase):
         db.session.delete(self.reload_list)
         db.session.commit()
         bucketlist = Bucketlist.query.get(1)
-        #assert not found in database
+        # assert not found in database
         self.assertEqual(bucketlist, None)
 
     def test_creating_an_item(self):
@@ -108,6 +114,11 @@ class TestModels(BaseTestCase):
         year = str(datetime.today().year)
         self.assertIn(year, str(reload_item.date_created))
         self.assertIn(year, str(reload_item.date_modified))
+
+        # test querying items
+        item_query = Item.query.all()
+        self.assertIn("<Item 'Cook lunch'>", str(item_query))
+        self.assertFalse("<Item 'Not in'>" in str(item_query))
 
         # creating an item with a missing name results in an error
 
@@ -161,7 +172,7 @@ class TestModels(BaseTestCase):
         self.assertEqual(reload_item.name, "Cook lunch")
         self.assertEqual(reload_item.description, "Coooking Ugali omena")
         self.assertEqual(reload_item.done, False)
-        #assert not found in database
+        # assert not found in database
         db.session.delete(reload_item)
 
         reload_item = Item.query.filter_by(
@@ -176,7 +187,11 @@ class TestModels(BaseTestCase):
 
         reload_user = user
         self.assertEqual(reload_user.id, 1)
-        self.assertEqual(reload_user.username, "Clement")
+        self.assertEqual(reload_user.username, "clement")
+
+        # test querying users
+        user_query = User.query.all()
+        self.assertIn("<User 'clement'", str(user_query))
 
     def test_user_password_inaccessible(self):
         user = User("Clement", "clement123")
@@ -186,6 +201,13 @@ class TestModels(BaseTestCase):
             user.password
             self.assertTrue('not a readable' in context.exception)
 
+    def test_expired_auth_token(self):
+        user = User('Imani', 'imani123')
+        token = user.generate_auth_token(0.5)
+        sleep(1)
+        verification = user.verify_auth_token(token)
+        self.assertEqual(verification, None)
+
     def test_deleting_user(self):
         user = User("Clement", "clement123")
         db.session.add(user)
@@ -193,13 +215,13 @@ class TestModels(BaseTestCase):
 
         reload_user = user
         self.assertEqual(reload_user.id, 1)
-        self.assertEqual(reload_user.username, "Clement")
+        self.assertEqual(reload_user.username, "clement")
 
         db.session.delete(user)
         db.session.commit()
 
         re_reload_user = User.query.filter_by(id=1).first()
-        #assert not found in database
+        # assert not found in database
         self.assertEqual(re_reload_user, None)
 
     def TearDown(self):

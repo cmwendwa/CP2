@@ -1,4 +1,4 @@
-from .test_api import ApiBaseTest
+from . import ApiBaseTest
 import json
 
 
@@ -18,7 +18,7 @@ class BucketlistsRouteTest(ApiBaseTest):
 
         received_data = str(response.data, encoding='utf-8')
         self.assertIn("name", received_data)
-        self.assertIn("Cook", received_data)
+        self.assertIn("cook", received_data)
         self.assertIn("items", received_data)
         self.assertIn("date_modified", received_data)
         self.assertIn("created_by", received_data)
@@ -124,7 +124,7 @@ class BucketlistsRouteTest(ApiBaseTest):
             '/api/v1/bucketlists/1', headers=self.header)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
-        self.assertIn("Cook", received_data)
+        self.assertIn("cook", received_data)
         # add a second bucketlist
         payload = {'name': "Play"}
         print(payload)
@@ -135,7 +135,7 @@ class BucketlistsRouteTest(ApiBaseTest):
             '/api/v1/bucketlists/2', headers=self.header)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
-        self.assertIn("Play", received_data)
+        self.assertIn("play", received_data)
 
         # retrieving a non existent item
         response = self.test_app.get(
@@ -169,6 +169,15 @@ class BucketlistsRouteTest(ApiBaseTest):
         self.assertEqual(put_response.status_code, 400)
         received_data = str(put_response.data, encoding='utf-8')
         self.assertFalse('New name not provided ' in received_data)
+
+        # editing a bucket list that's not there
+        update = {'name': 'Cooking'}
+        put_response = self.test_app.put(
+            '/api/v1/bucketlists/33', data=update, headers=self.header)
+        print(put_response)
+        self.assertEqual(put_response.status_code, 404)
+        received_data = str(put_response.data, encoding='utf-8')
+        self.assertFalse('does not exist ' in received_data)
 
     def test_deleting_a_bucketlist(self):
         # add a bucketlist

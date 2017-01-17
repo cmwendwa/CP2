@@ -69,7 +69,7 @@ class User(db.Model):
         raise AttributeError("Password is not a readable attribute")
 
     def __init__(self, username, password):
-        self.username = username
+        self.username = username.lower()
         self.password_hash = self.hash_password(password)
 
     def __repr__(self):
