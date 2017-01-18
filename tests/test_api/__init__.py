@@ -16,13 +16,12 @@ class ApiBaseTest(BaseTestCase):
         # login user
         login_response = json.loads(str(response.data, encoding='utf-8'))
         token = login_response['Authorization']
-        self.header = {'Authorization': ' Basic ' + b64encode(
-            bytes(token + ':', 'ascii')).decode('ascii')}
+        self.header = {'Authorization': 'Token ' + token}
 
 
 class TestApi(ApiBaseTest):
     def test_index_resource(self):
-        #with authentication
+        # with authentication
         response = self.test_app.get('api/v1/', headers=self.header)
         received_data = str(response.data, 'utf-8')
         self.assertEqual(response.status_code, 200)

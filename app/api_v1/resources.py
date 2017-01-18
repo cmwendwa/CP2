@@ -2,24 +2,20 @@ from flask import abort, request, jsonify, url_for, g
 from ..models import User, Bucketlist, Item
 from flask_restful import Api, Resource, reqparse, fields, marshal
 from flask_sqlalchemy import SQLAlchemy
-from flask_httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPTokenAuth
 from app import db
 from ..serializers import bucketlist_serializer, item_serializer
-
-auth = HTTPBasicAuth()
-
 from base64 import b32encode
 
+auth = HTTPTokenAuth(scheme='Token')
 
-@auth.verify_password
-def verify_password(username_or_token, password):
+
+@auth.verify_token
+def verify_token(token):
     # first try to authenticate by token
-    user = User.verify_auth_token(username_or_token)
+    user = User.verify_auth_token(token)
     if not user:
-        # try to authenticate with username/password
-        user = User.query.filter_by(username=username_or_token).first()
-        if not user or not user.verify_password(password) == True:
-            return False
+        return False
     g.user = user
     return True
 
@@ -60,40 +56,13 @@ class LoginApi(Resource):
         password = args['password']
         user = User.query.filter_by(username=username).first()
         if user:
-            if verify_password(user.username, password) == True:
+            if user.verify_password(password) == True:
                 token = user.generate_auth_token()
                 return {'Authorization': token.decode('ascii')}
-            elif verify_password(user.username, password) == False:
+            elif user.verify_password(password) == False:
                 return {'message': 'Invalid password '}, 400
-
         else:
-            return {'message': 'Specified username not recognised '}, 400
-
-
-class GetTokenApi(Resource):
-    @auth.login_required
-    def get(self):
-        """
-        This is the token endpoint and returns the authentication token of a logged a user
-        tags:
-          - Bucketlist API
-        parameters:
-          -
-        responses:
-          500:
-            description: Server error!
-          200:
-            description: successful request
-            schema:
-          404:
-            description: Not logged in.
-          400:
-            description: Error logging in
-
-
-        """
-        token = g.user.generate_auth_token()
-        return {'token': token.decode('ascii')}, 200
+            return {'message': 'Specified username not found '}, 400
 
 
 class IndexResource(Resource):
