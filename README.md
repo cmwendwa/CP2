@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/badges/badgerbadgerbadger.svg?branch=master)](https://travis-ci.org/badges/badgerbadgerbadger)
+[![Coverage Status](https://coveralls.io/repos/github/clementm916/CP2/badge.svg?branch=develop)](https://coveralls.io/github/clementm916/CP2?branch=develop)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Bucketlist API
