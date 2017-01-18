@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/clementm916/CP2.svg?branch=master)](https://travis-ci.org/clementm916/CP2) [![Coverage Status](https://coveralls.io/repos/github/clementm916/CP2/badge.svg?branch=master)](https://coveralls.io/github/clementm916/CP2?branch=master)
-
+[![Build Status](https://travis-ci.org/clementm916/CP2.svg?branch=develop)](https://travis-ci.org/clementm916/CP2[![Coverage Status](https://coveralls.io/repos/github/clementm916/CP2/badge.svg?branch=develop)](https://coveralls.io/github/clementm916/CP2?branch=develop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Bucketlist API
 
