@@ -12,7 +12,7 @@ auth = HTTPTokenAuth(scheme='Token')
 
 @auth.verify_token
 def verify_token(token):
-    # first try to authenticate by token
+    """verifies token"""
     user = User.verify_auth_token(token)
     if not user:
         return False
@@ -30,6 +30,14 @@ class RegisterApi(Resource):
         super(RegisterApi, self).__init__()
 
     def post(self):
+        """
+        Register a new user given a username and a password
+
+        parameters:
+          -username
+          -password
+
+        """
         args = self.parse.parse_args()
         username = args['username']
         password = args['password']
@@ -51,6 +59,16 @@ class LoginApi(Resource):
         super(LoginApi, self).__init__()
 
     def post(self):
+        """
+        Logs in the user given a username and a password and return an authentication token for a 
+        successful login
+
+        parameters:
+          -username
+          -password
+
+        """
+
         args = self.parse.parse_args()
         username = args['username'].lower()
         password = args['password']
@@ -73,8 +91,6 @@ class IndexResource(Resource):
         Call this api to create a Bucketlists of things you want to do, add items to this
         bucketlist, view, edit and delete bucketlists and items
         ---
-        tags:
-          - Bucketlist API
         parameters:
           -
         responses:
@@ -97,12 +113,19 @@ class IndexResource(Resource):
 class BucketlistsApi(Resource):
     @auth.login_required
     def post(self):
+        """
+        Creates a new bucketlst given the name 
+
+        parameters:
+          -name
+        """
+
         parse = reqparse.RequestParser()
         parse.add_argument('name', type=str, required=True,
                            help='Buckestlist  name not provided', location='form')
         args = parse.parse_args()
         name = args['name'].casefold()
-        if Bucketlist.query.filter_by(name=name).first() == None:
+        if Bucketlist.query.filter_by(name=name, created_by=g.user.id).first() == None:
             created_by = g.user.id
             new_bucketlist = Bucketlist(name, created_by)
             db.session.add(new_bucketlist)
@@ -114,6 +137,16 @@ class BucketlistsApi(Resource):
 
     @auth.login_required
     def get(self):
+        """
+        Returns bucketlists created by a given user, the returned lists are paginated. The 'q' argument
+        is used to search a bucketlist by name.
+
+        parameters:
+          -limit
+          -page
+          -id
+          -q
+       """
         parse = reqparse.RequestParser()
         parse.add_argument('page', type=int, default=1)
         parse.add_argument('limit', type=int, default=5)
@@ -166,6 +199,14 @@ class BucketlistApi(Resource):
 
     @auth.login_required
     def get(self, id):
+        """
+        Returns the bucketlist with the given id
+
+        parameters:
+          -id
+
+        """
+
         got_list = Bucketlist.query.filter_by(
             id=id, created_by=g.user.id).first()
         if not got_list == None:
@@ -175,6 +216,13 @@ class BucketlistApi(Resource):
 
     @auth.login_required
     def put(self, id):
+        """
+        Edits/updates the bucketlist with the given id
+
+        parameters:
+          -name
+          -id
+        """
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=str, required=True,
                             help='New name not provided', location='form')
@@ -194,6 +242,12 @@ class BucketlistApi(Resource):
 
     @auth.login_required
     def delete(self, id):
+        """
+        Deletes the bucketlist with the given id
+
+        parameters:
+          -id
+        """
         to_delete = Bucketlist.query.filter_by(
             created_by=g.user.id, id=id).first()
         if not to_delete == None:
@@ -215,6 +269,16 @@ class BucketlistItemCreateApi(Resource):
 
     @auth.login_required
     def post(self, id):
+        """
+        Creates a new item in the bucketlist with the provided id
+
+        parameters:
+          -name
+          -description
+          -id
+          -item_id
+
+        """
         args = self.parse.parse_args()
         item_name = args['name']
         description = args['description']
@@ -249,6 +313,18 @@ class BucketItemsApi(Resource):
 
     @auth.login_required
     def put(self, id, item_id):
+        """
+        Edits/updates the an item with the given item_id and within the bucketlist with the given id
+
+        parameters:
+          -name
+          -description
+          -done
+          -id
+          -item_id
+
+
+        """
         parser = reqparse.RequestParser()
         parser.add_argument('name', type=str)
         parser.add_argument('done', type=bool)
@@ -274,6 +350,14 @@ class BucketItemsApi(Resource):
 
     @auth.login_required
     def delete(self, id, item_id):
+        """
+        Deletes the an item with the given item_id and within the bucketlist with the given id
+
+        parameters:
+          -id
+          -item_id
+
+        """
 
         delete_item = Item.query.filter_by(
             bucketlist_id=id, id=item_id).first()

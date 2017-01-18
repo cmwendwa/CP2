@@ -8,7 +8,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
 class AbstractBaseModel(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(54), unique=True)
+    name = db.Column(db.String(54))
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
     date_modified = db.Column(db.DateTime, default=db.func.current_timestamp(),
                               onupdate=db.func.current_timestamp())
@@ -19,9 +19,11 @@ class AbstractBaseModel(db.Model):
 
 class Bucketlist(AbstractBaseModel):
     __tablename__ = 'bucketlists'
+    name = db.Column(db.String(54))
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     items = db.relationship('Item', cascade="all,delete", backref='bucketlist',
                             lazy='select')
+    db.UniqueConstraint(name, created_by)
 
     def __init__(self, name, created_by=None):
         self.created_by = created_by
@@ -75,7 +77,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-    def generate_auth_token(self, expiration=1800):
+    def generate_auth_token(self, expiration=18000):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
