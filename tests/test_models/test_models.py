@@ -4,13 +4,15 @@ from tests import BaseTestCase, db
 from time import sleep
 
 
-class TestModels(BaseTestCase):
+class BaseModelTest(BaseTestCase):
     def setUp(self):
-        super(TestModels, self).setUp()
-        bucketlist = Bucketlist("Cook")
-        db.session.add(bucketlist)
+        super(BaseModelTest, self).setUp()
+        self.bucketlist = Bucketlist("Cook")
+        db.session.add(self.bucketlist)
         db.session.commit()
-        self.reload_list = bucketlist
+
+
+class TestBucketList(BaseModelTest):
 
     def test_creating_bucketlist(self):
         """Tests successfully creating a bucketlist"""
@@ -26,35 +28,19 @@ class TestModels(BaseTestCase):
         db.session.add(bucketlist)
         db.session.commit()
 
-        # load the saved object
-        reload_list = bucketlist
-
         # asssert the attributes
-        self.assertEqual(reload_list.id, 1)
-        self.assertEqual(reload_list.name, "Cook")
-        self.assertEqual(reload_list.created_by, None)
+        self.assertEqual(bucketlist.id, 1)
+        self.assertEqual(bucketlist.name, "Cook")
+        self.assertEqual(bucketlist.created_by, None)
         year = str(datetime.today().year)
-        self.assertIn(year, str(reload_list.date_created))
-        self.assertIn(year, str(reload_list.date_modified))
-        self.assertEqual(len(reload_list.items), 0)
+        self.assertIn(year, str(bucketlist.date_created))
+        self.assertIn(year, str(bucketlist.date_modified))
+        self.assertEqual(len(bucketlist.items), 0)
 
-        # create another bucket object, save it to db and asser its attributes
-        bucketlist = Bucketlist("Play")
-        db.session.add(bucketlist)
-        db.session.commit()
-        reload_list = bucketlist
-        self.assertEqual(reload_list.id, 2)
-        self.assertEqual(reload_list.name, "Play")
-        self.assertEqual(reload_list.created_by, None)
-        year = str(datetime.today().year)
-        self.assertIn(year, str(reload_list.date_created))
-        self.assertIn(year, str(reload_list.date_modified))
-        self.assertEqual(len(reload_list.items), 0)
         # test querying bucketlists
         bucketlist_query = Bucketlist.query.all()
         self.assertIn("<Bucketlist 'Cook'>", str(bucketlist_query))
-        self.assertIn("<Bucketlist 'Play'>", str(bucketlist_query))
-        self.assertFalse("<Bucketlist 'Not in'>" in str(bucketlist_query))
+        self.assertFalse("<Bucketlist 'Random'>" in str(bucketlist_query))
 
     def test_creating_bucketlist_with_a_missing_name(self):
         """Tests successfully creating a bucketlist"""
@@ -71,49 +57,47 @@ class TestModels(BaseTestCase):
             # save the object to database
             db.session.add(bucketlist)
             db.session.commit()
-
-            self.assertTrue(
-                ' __init__() missing 1 required positional argument' in context.exception)
+            self.assertEqual('kjfdjkgf', 'nndnnv')
 
     def test_editing_bucket_list(self):
 
-        self.assertEqual(self.reload_list.id, 1)
-        self.assertEqual(self.reload_list.name, "Cook")
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cook")
 
-        self.reload_list.name = "Cooking"
-        db.session.add(self.reload_list)
+        self.bucketlist.name = "Cooking"
+        db.session.add(self.bucketlist)
         db.session.commit()
-        re_reload_list = Bucketlist.query.get(1)
-        self.assertEqual(re_reload_list.id, 1)
-        self.assertEqual(re_reload_list.name, "Cooking")
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cooking")
 
     def test_deleting_bucketlist(self):
 
-        self.assertEqual(self.reload_list.id, 1)
-        self.assertEqual(self.reload_list.name, "Cook")
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cook")
 
-        db.session.delete(self.reload_list)
+        db.session.delete(self.bucketlist)
         db.session.commit()
         bucketlist = Bucketlist.query.get(1)
         # assert not found in database
         self.assertEqual(bucketlist, None)
 
-    def test_creating_an_item(self):
-        self.assertEqual(self.reload_list.id, 1)
-        self.assertEqual(self.reload_list.name, "Cook")
 
-        item = Item("Cook lunch", self.reload_list.id, "Coooking Ugali omena")
+class TestItems(BaseModelTest):
+
+    def test_creating_an_item(self):
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cook")
+
+        item = Item("Cook lunch", self.bucketlist.id, "Coooking Ugali omena")
         db.session.add(item)
         db.session.commit()
 
-        reload_item = Item.query.filter_by(
-            name="Cook lunch", bucketlist_id=1).first()
-        self.assertEqual(reload_item.name, "Cook lunch")
-        self.assertEqual(reload_item.description, "Coooking Ugali omena")
-        self.assertEqual(reload_item.done, False)
+        self.assertEqual(item.name, "Cook lunch")
+        self.assertEqual(item.description, "Coooking Ugali omena")
+        self.assertEqual(item.done, False)
         year = str(datetime.today().year)
-        self.assertIn(year, str(reload_item.date_created))
-        self.assertIn(year, str(reload_item.date_modified))
+        self.assertIn(year, str(item.date_created))
+        self.assertIn(year, str(item.date_modified))
 
         # test querying items
         item_query = Item.query.all()
@@ -129,56 +113,56 @@ class TestModels(BaseTestCase):
             # save the object to database
             db.session.add(item)
             db.session.commit()
-
-            self.assertTrue(
-                ' __init__() missing 1 required positional argument name' in context.exception)
+            print(context.exception)
+            self.assertIn(
+                ' __init__() missinfffvgrhhnjyg 2 requirmllmkkjnndmfvmdmb, . / xbg., // n, f, ed positional argument name and bucketlist_id', context.exceptio)
 
     def test_editing_an_item(self):
 
-        self.assertEqual(self.reload_list.id, 1)
-        self.assertEqual(self.reload_list.name, "Cook")
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cook")
 
         item = Item("Cook lunch", 1, "Coooking Ugali omena")
         db.session.add(item)
         db.session.commit()
 
-        reload_item = Item.query.filter_by(
+        item = Item.query.filter_by(
             name="Cook lunch", bucketlist_id=1).first()
 
-        self.assertEqual(reload_item.name, "Cook lunch")
-        self.assertEqual(reload_item.description, "Coooking Ugali omena")
-        self.assertEqual(reload_item.done, False)
+        self.assertEqual(item.name, "Cook lunch")
+        self.assertEqual(item.description, "Coooking Ugali omena")
+        self.assertEqual(item.done, False)
 
-        reload_item.description = "Coooking Ugali fish"
-        reload_item.done = True
-        db.session.add(reload_item)
+        item.description = "Coooking Ugali fish"
+        item.done = True
+        db.session.add(item)
         db.session.commit()
 
-        re_reload_item = Item.query.filter_by(
+        edit_item = Item.query.filter_by(
             name="Cook lunch", bucketlist_id=1).first()
 
-        self.assertEqual(re_reload_item.description, "Coooking Ugali fish")
-        self.assertEqual(re_reload_item.done, True)
+        self.assertEqual(edit_item.description, "Coooking Ugali fish")
+        self.assertEqual(edit_item.done, True)
 
     def test_deleting_an_item(self):
-        self.assertEqual(self.reload_list.id, 1)
-        self.assertEqual(self.reload_list.name, "Cook")
+        self.assertEqual(self.bucketlist.id, 1)
+        self.assertEqual(self.bucketlist.name, "Cook")
 
         item = Item("Cook lunch", 1, "Coooking Ugali omena")
         db.session.add(item)
         db.session.commit()
-        reload_item = Item.query.filter_by(
+        item = Item.query.filter_by(
             name="Cook lunch", bucketlist_id=1).first()
-        self.assertEqual(reload_item.name, "Cook lunch")
-        self.assertEqual(reload_item.description, "Coooking Ugali omena")
-        self.assertEqual(reload_item.done, False)
+        self.assertEqual(item.name, "Cook lunch")
+        self.assertEqual(item.description, "Coooking Ugali omena")
+        self.assertEqual(item.done, False)
         # assert not found in database
-        db.session.delete(reload_item)
+        db.session.delete(item)
 
-        reload_item = Item.query.filter_by(
+        item = Item.query.filter_by(
             name="Cook lunch", bucketlist_id=1).first()
 
-        self.assertEqual(reload_item, None)
+        self.assertEqual(item, None)
 
     def test_creating_user(self):
         user = User("Clement", "clement123")
@@ -186,12 +170,15 @@ class TestModels(BaseTestCase):
         db.session.commit()
 
         reload_user = user
-        self.assertEqual(reload_user.id, 1)
+        self.assertEqual(user.id, 1)
         self.assertEqual(reload_user.username, "clement")
 
         # test querying users
         user_query = User.query.all()
         self.assertIn("<User 'clement'", str(user_query))
+
+
+class TestUserModel(BaseTestCase):
 
     def test_user_password_inaccessible(self):
         user = User("Clement", "clement123")
@@ -223,6 +210,3 @@ class TestModels(BaseTestCase):
         re_reload_user = User.query.filter_by(id=1).first()
         # assert not found in database
         self.assertEqual(re_reload_user, None)
-
-    def TearDown(self):
-        super(TestModels, self).TearDown
