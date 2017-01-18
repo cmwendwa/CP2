@@ -27,6 +27,7 @@ def create_app(config_choice):
     @app.errorhandler(404)
     def page_not_found(e):  # pragma: no cover
         return jsonify(error=404, message=str(e)), 404
+
     @app.errorhandler(405)
     def not_allowed(e):  # pragma: no cover
         return jsonify(error=405, message=str(e)), 405
@@ -34,6 +35,7 @@ def create_app(config_choice):
     @app.errorhandler(403)
     def forbidden(e):  # pragma: no cover
         return jsonify(error=403, message=str(e)), 403
+
     @app.errorhandler(401)
     def invalid_credentials(e):  # pragma: no cover
         return jsonify(error=401, text=str(e)), 401
@@ -45,6 +47,3 @@ def create_app(config_choice):
 
 
 app = create_app('development')
-
-
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////data/pp.db'

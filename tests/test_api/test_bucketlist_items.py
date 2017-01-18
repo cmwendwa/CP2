@@ -20,7 +20,7 @@ class TestBucketlistItems(ApiBaseTest):
         response = self.test_app.post(
             '/api/v1/bucketlists/1/items/', data=payload, headers=self.header)
         received_data = str(response.data, 'utf-8')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertIn("name", received_data)
         self.assertIn("cook lunch", received_data)
         self.assertIn("description", received_data)
@@ -42,7 +42,7 @@ class TestBucketlistItems(ApiBaseTest):
         response = self.test_app.post(
             '/api/v1/bucketlists/1/items/', data=payload, headers=self.header)
         received_data = str(response.data, 'utf-8')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertIn("name", received_data)
         self.assertIn("cook supper", received_data)
         self.assertIn("description", received_data)
@@ -113,9 +113,7 @@ class TestBucketlistItems(ApiBaseTest):
         # delete item successfully
         response = self.test_app.delete(
             '/api/v1/bucketlists/1/items/1', headers=self.header)
-        received_data = str(response.data, 'utf-8')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("successfully deleted", received_data)
+        self.assertEqual(response.status_code, 204)
 
         # deleting an item that's not existent
         response = self.test_app.delete(

@@ -75,8 +75,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         # retrieve all bucketlists
         response = self.test_app.get(
             'api/v1/bucketlists/', headers=self.header)
-
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
         self.assertIn("cook", received_data)
@@ -96,7 +94,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         # retrieving a single bucketlist using search
         response = self.test_app.get(
             'api/v1/bucketlists/?q=cook', headers=self.header)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
         self.assertIn("id", received_data)
@@ -107,7 +104,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         # test retrieving an item that does not exist by name
         response = self.test_app.get(
             'api/v1/bucketlists/?q=notthere', headers=self.header)
-        print(response.data)
         self.assertEqual(response.status_code, 200)
         received_data = str(response.data, encoding='utf-8')
         self.assertIn("not found", received_data)
@@ -115,7 +111,6 @@ class BucketlistsRouteTest(ApiBaseTest):
     def test_retrieving_a_bucketlist(self):
         # add firsr bucketlist
         payload = {'name': "Cook"}
-        print(payload)
         response = self.test_app.post(
             '/api/v1/bucketlists/', data=payload, headers=self.header)
 
@@ -127,7 +122,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         self.assertIn("cook", received_data)
         # add a second bucketlist
         payload = {'name': "Play"}
-        print(payload)
         response = self.test_app.post(
             '/api/v1/bucketlists/', data=payload, headers=self.header)
         # retrieve second bucketlist
@@ -148,7 +142,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         # add a bucketlist
         # add firsr bucketlist
         payload = {'name': "Cook"}
-        print(payload)
         response = self.test_app.post(
             '/api/v1/bucketlists/', data=payload, headers=self.header)
 
@@ -174,7 +167,6 @@ class BucketlistsRouteTest(ApiBaseTest):
         update = {'name': 'Cooking'}
         put_response = self.test_app.put(
             '/api/v1/bucketlists/33', data=update, headers=self.header)
-        print(put_response)
         self.assertEqual(put_response.status_code, 404)
         received_data = str(put_response.data, encoding='utf-8')
         self.assertFalse('does not exist ' in received_data)
@@ -188,9 +180,10 @@ class BucketlistsRouteTest(ApiBaseTest):
         # delete bucketlist
         response = self.test_app.delete(
             '/api/v1/bucketlists/1', headers=self.header)
-        received_data = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("successfully deleted", received_data)
+        self.assertEqual(response.status_code, 204)
+        response = self.test_app.get(
+            '/api/v1/bucketlists/1', headers=self.header)
+        self.assertEqual(response.status_code, 404)
 
         # delete a non-existent item
         response = self.test_app.delete(

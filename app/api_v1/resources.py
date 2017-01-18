@@ -6,7 +6,7 @@ from flask_httpauth import HTTPTokenAuth
 from app import db
 from ..serializers import bucketlist_serializer, item_serializer
 from base64 import b32encode
-
+from sqlalchemy import exc
 auth = HTTPTokenAuth(scheme='Token')
 
 
@@ -21,12 +21,21 @@ def verify_token(token):
 
 
 class RegisterApi(Resource):
+
     def __init__(self):
         self.parse = reqparse.RequestParser()
         self.parse.add_argument(
-            'username', type=str, required=True, help='username not provided', location='form')
+            'username',
+            type=str,
+            required=True,
+            help='username not provided',
+            location='form')
         self.parse.add_argument(
-            'password', type=str, required=True, help='password not provided', location='form')
+            'password',
+            type=str,
+            required=True,
+            help='password not provided',
+            location='form')
         super(RegisterApi, self).__init__()
 
     def post(self):
@@ -41,26 +50,44 @@ class RegisterApi(Resource):
         args = self.parse.parse_args()
         username = args['username']
         password = args['password']
-        if User.query.filter_by(username=username).first() is not None:
-            return {'message': "User already exists"}, 409  # existing user
-        user = User(username=username, password=password)
-        db.session.add(user)
-        db.session.commit()
-        return {'message': 'User successfully added'}, 201
+        try:
+            user = User(username, password)
+            db.session.add(user)
+            db.session.commit()
+            return {'message': 'User successfully added'}, 201
+        except exc.IntegrityError:
+            db.session.rollback()
+            return {'message': "User already exists"}, 409
+
+        # existing user
+        # if User.query.filter_by(username=username).first() is not None:
+        #     return {'message': "User already exists"}, 409  # existing user
+        # user = User(username=username, password=password)
+        # db.session.add(user)
+        # db.session.commit()
 
 
 class LoginApi(Resource):
+
     def __init__(self):
         self.parse = reqparse.RequestParser()
         self.parse.add_argument(
-            'username', type=str, required=True, help='username not provided', location='form')
+            'username',
+            type=str,
+            required=True,
+            help='username not provided',
+            location='form')
         self.parse.add_argument(
-            'password', type=str, required=True, help='password not provided', location='form')
+            'password',
+            type=str,
+            required=True,
+            help='password not provided',
+            location='form')
         super(LoginApi, self).__init__()
 
     def post(self):
         """
-        Logs in the user given a username and a password and return an authentication token for a 
+        Logs in the user given a username and a password and return an authentication token for a
         successful login
 
         parameters:
@@ -74,16 +101,17 @@ class LoginApi(Resource):
         password = args['password']
         user = User.query.filter_by(username=username).first()
         if user:
-            if user.verify_password(password) == True:
+            if user.verify_password(password):
                 token = user.generate_auth_token()
                 return {'Authorization': token.decode('ascii')}
-            elif user.verify_password(password) == False:
-                return {'message': 'Invalid password '}, 400
+            if not user.verify_password(password):
+                return {'message': 'Invalid password '}, 403
         else:
-            return {'message': 'Specified username not found '}, 400
+            return {'message': 'Specified username not found '}, 403
 
 
 class IndexResource(Resource):
+
     @auth.login_required
     def get(self):
         """
@@ -111,27 +139,34 @@ class IndexResource(Resource):
 
 
 class BucketlistsApi(Resource):
+
     @auth.login_required
     def post(self):
         """
-        Creates a new bucketlst given the name 
+        Creates a new bucketlst given the name
 
         parameters:
           -name
         """
 
         parse = reqparse.RequestParser()
-        parse.add_argument('name', type=str, required=True,
-                           help='Buckestlist  name not provided', location='form')
+        parse.add_argument(
+            'name',
+            type=str,
+            required=True,
+            help='Buckestlist  name not provided',
+            location='form')
         args = parse.parse_args()
         name = args['name'].casefold()
-        if Bucketlist.query.filter_by(name=name, created_by=g.user.id).first() == None:
+        if Bucketlist.query.filter_by(
+                name=name, created_by=g.user.id).first() is None:
             created_by = g.user.id
             new_bucketlist = Bucketlist(name, created_by)
             db.session.add(new_bucketlist)
             db.session.commit()
             new_bucketlist = new_bucketlist
-            return {"successfully created: ": marshal(new_bucketlist, bucketlist_serializer)}, 201
+            return {"successfully created: ": marshal(
+                new_bucketlist, bucketlist_serializer)}, 201
         else:
             return {'message': "Bucketlist already exists"}, 409
 
@@ -161,7 +196,10 @@ class BucketlistsApi(Resource):
                 name=search_name.casefold(), created_by=g.user.id).first()
 
             if search_results:
-                return {"Found ": marshal(search_results, bucketlist_serializer)}
+                return {
+                    "Found ": marshal(
+                        search_results,
+                        bucketlist_serializer)}
             else:
                 return {'message': 'Bucketlist ' + search_name + ' not found.'}
         # get all bucketlists and paginarw
@@ -209,7 +247,7 @@ class BucketlistApi(Resource):
 
         got_list = Bucketlist.query.filter_by(
             id=id, created_by=g.user.id).first()
-        if not got_list == None:
+        if got_list:
             return marshal(got_list, bucketlist_serializer)
         else:
             return {'message': 'Specified bucketlist not found.'}, 404
@@ -231,11 +269,12 @@ class BucketlistApi(Resource):
 
         got_list = Bucketlist.query.filter_by(
             id=id, created_by=g.user.id).first()
-        if not got_list == None:
+        if not got_list is None:
             got_list.name = new_name
             db.session.add(got_list)
             db.session.commit()
-            return {"successfully edited ": marshal(got_list, bucketlist_serializer)}, 200
+            return {"successfully edited ": marshal(
+                got_list, bucketlist_serializer)}, 200
 
         else:
             return {'message': 'Specified bucketlist not found.'}, 404
@@ -250,15 +289,16 @@ class BucketlistApi(Resource):
         """
         to_delete = Bucketlist.query.filter_by(
             created_by=g.user.id, id=id).first()
-        if not to_delete == None:
+        if not to_delete is None:
             db.session.delete(to_delete)
             db.session.commit()
-            return {'message': 'Bucketlist successfully deleted'}, 200
+            return {'message': 'Bucketlist successfully deleted'}, 204
         else:
             return {'message': 'Not deleted, Bucketlist does not exist'}, 404
 
 
 class BucketlistItemCreateApi(Resource):
+
     def __init__(self):
         self.parse = reqparse.RequestParser()
         self.parse.add_argument('name', type=str, required=True,
@@ -286,10 +326,14 @@ class BucketlistItemCreateApi(Resource):
         bucketlist = Bucketlist.query.filter_by(
             id=bucketlist_id, created_by=g.user.id).first()
         if not bucketlist:
-            return {'message': 'The bucketlist you want to insert an item to does not exists.'}, 404
+            return {
+                'message': 'The bucketlist you want to insert an item to does not exists.'}, 404
 
-        if Item.query.filter_by(name=item_name, bucketlist_id=bucketlist_id).first():
-            return {'message': 'An item with the provided item name already exists.'}, 409
+        if Item.query.filter_by(
+                name=item_name,
+                bucketlist_id=bucketlist_id).first():
+            return {
+                'message': 'An item with the provided item name already exists.'}, 409
         if description:
             new_item = Item(item_name, bucketlist_id, description)
         else:
@@ -298,10 +342,11 @@ class BucketlistItemCreateApi(Resource):
         db.session.commit()
         created_item = new_item
 
-        return {"successfuly created: ": marshal(new_item, item_serializer)}
+        return {"successfuly created: ": marshal(new_item, item_serializer)}, 201
 
 
 class BucketItemsApi(Resource):
+
     def __init__(self):
         self.parse = reqparse.RequestParser()
         self.parse.add_argument('name', type=str, required=True,
@@ -331,7 +376,7 @@ class BucketItemsApi(Resource):
         parser.add_argument('description', type=str)
         edit_item = Item.query.filter_by(bucketlist_id=id, id=item_id).first()
 
-        if edit_item == None:
+        if edit_item is None:
             return {'message': 'The item you tried to edit does not exist.'}, 404
         else:
             args = parser.parse_args()
@@ -346,7 +391,9 @@ class BucketItemsApi(Resource):
                 edit_item.description = description
             db.session.add(edit_item)
             db.session.commit()
-            return {"successfully upadated: ": marshal(edit_item, item_serializer)}, 200
+            return {
+                "successfully upadated: ": marshal(
+                    edit_item, item_serializer)}, 200
 
     @auth.login_required
     def delete(self, id, item_id):
@@ -361,9 +408,10 @@ class BucketItemsApi(Resource):
 
         delete_item = Item.query.filter_by(
             bucketlist_id=id, id=item_id).first()
-        if delete_item == None:
-            return {'message': 'The item you tried to delete does not exist.'}, 404
+        if delete_item is None:
+            return {
+                'message': 'The item you tried to delete does not exist.'}, 404
         db.session.delete(delete_item)
         db.session.commit()
 
-        return {'message': 'Item was successfully deleted'}, 200
+        return {'message': ''}, 204

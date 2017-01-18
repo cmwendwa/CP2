@@ -5,6 +5,7 @@ from time import sleep
 
 
 class BaseModelTest(BaseTestCase):
+
     def setUp(self):
         super(BaseModelTest, self).setUp()
         self.bucketlist = Bucketlist("Cook")
@@ -115,7 +116,8 @@ class TestItems(BaseModelTest):
             db.session.commit()
             print(context.exception)
             self.assertIn(
-                ' __init__() missinfffvgrhhnjyg 2 requirmllmkkjnndmfvmdmb, . / xbg., // n, f, ed positional argument name and bucketlist_id', context.exceptio)
+                ' __init__() missinfffvgrhhnjyg 2 requirmllmkkjnndmfvmdmb, . / xbg., // n, f, ed positional argument name and bucketlist_id',
+                context.exceptio)
 
     def test_editing_an_item(self):
 

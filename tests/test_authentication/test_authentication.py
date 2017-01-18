@@ -50,6 +50,7 @@ class TestUserRegistration(BaseTestCase):
 
 
 class TestUserLogin(BaseTestCase):
+
     def setUp(self):
         """ Sets up the test client"""
         super(TestUserLogin, self).setUp()
@@ -72,14 +73,14 @@ class TestUserLogin(BaseTestCase):
         payload = dict(username="john", password="wrongpass")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
         self.assertIn('Invalid password', message)
 
         # with non-existent username
         payload = dict(username="nonexistent", password="password123")
         response = self.test_app.post('/api/v1/auth/login', data=payload)
         message = str(response.data, encoding='utf-8')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 403)
         self.assertIn(' username not found', message)
 
     # def test_getting_an_authentication_token(self):
@@ -100,7 +101,7 @@ class TestUserLogin(BaseTestCase):
         received_data = str(response.data, 'utf-8')
         token = json.loads(received_data)['Authorization']
         print("Token: ", str(token))
-        header = {'Authorization':'Token ' + token}
+        header = {'Authorization': 'Token ' + token}
 
         response = self.test_app.get('api/v1/', headers=header)
         received_data = str(response.data, 'utf-8')

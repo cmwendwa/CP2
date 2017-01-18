@@ -51,10 +51,13 @@ class Item(AbstractBaseModel):
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(32), index=True)
+    username = db.Column(db.String(32), unique=True)
     password_hash = db.Column(db.String(128))
     bucketlists = db.relationship(
-        'Bucketlist', cascade="all,delete", backref='bucketlist', lazy='dynamic')
+        'Bucketlist',
+        cascade="all,delete",
+        backref='bucketlist',
+        lazy='dynamic')
 
     @staticmethod
     def hash_password(password):
