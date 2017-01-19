@@ -16,7 +16,7 @@ class ApiBaseTest(BaseTestCase):
         # login user
         login_response = json.loads(str(response.data, encoding='utf-8'))
         token = login_response['Authorization']
-        self.header = {'Authorization': 'Token ' + token}
+        self.header = {'Authorization': token}
 
 
 class TestApi(ApiBaseTest):

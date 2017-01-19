@@ -96,7 +96,7 @@ class LoginApi(Resource):
         if user:
             if user.verify_password(password):
                 token = user.generate_auth_token()
-                return {'Authorization': token.decode('ascii')}
+                return {'Authorization': 'Token ' + token.decode('ascii')}
             if not user.verify_password(password):
                 return {'message': 'Invalid password '}, 403
         else:

@@ -101,7 +101,7 @@ class TestUserLogin(BaseTestCase):
         received_data = str(response.data, 'utf-8')
         token = json.loads(received_data)['Authorization']
         print("Token: ", str(token))
-        header = {'Authorization': 'Token ' + token}
+        header = {'Authorization': token}
 
         response = self.test_app.get('api/v1/', headers=header)
         received_data = str(response.data, 'utf-8')
