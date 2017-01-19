@@ -59,13 +59,6 @@ class RegisterApi(Resource):
             db.session.rollback()
             return {'message': "User already exists"}, 409
 
-        # existing user
-        # if User.query.filter_by(username=username).first() is not None:
-        #     return {'message': "User already exists"}, 409  # existing user
-        # user = User(username=username, password=password)
-        # db.session.add(user)
-        # db.session.commit()
-
 
 class LoginApi(Resource):
 
@@ -202,10 +195,10 @@ class BucketlistsApi(Resource):
                         bucketlist_serializer)}
             else:
                 return {'message': 'Bucketlist ' + search_name + ' not found.'}
-        # get all bucketlists and paginarw
+        # get all bucketlists and paginate
         bucketlists_per_page = Bucketlist.query.filter_by(
             created_by=g.user.id).paginate(
-                page=page_no, per_page=limit, error_out=False)
+                page=page_no, per_page=limit, error_out=True)
 
         all_bucketlists = bucketlists_per_page.pages
 

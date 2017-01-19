@@ -56,7 +56,7 @@ class User(db.Model):
     bucketlists = db.relationship(
         'Bucketlist',
         cascade="all,delete",
-        backref='bucketlist',
+        backref='user',
         lazy='dynamic')
 
     @staticmethod
@@ -80,7 +80,7 @@ class User(db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-    def generate_auth_token(self, expiration=18000):
+    def generate_auth_token(self, expiration=1800):
         s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
         return s.dumps({'id': self.id})
 
